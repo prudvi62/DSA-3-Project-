@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Repeated Substring Detection in Large Documents Using Suffix Structures - Data Structures and Algorithms 3 College Project Demonstration">
+  <title>Repeated Substring Detection in Large Documents Using Suffix Structures | DSA-3 Project</title>
+  
+  <!-- Google Fonts: Inter & JetBrains Mono for academic look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Project Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. HEADER & NAVIGATION
+       ========================================================================= -->
+  <header class="header">
+    <div class="container header-container">
+      <div class="brand-wrapper">
+        <div class="brand-title">
+          <span>Suffix Structures Analyzer</span>
+          <span class="brand-badge">DSA-3</span>
+        </div>
+        <div class="brand-subtitle">Suffix Array &amp; LCP Based Repeated Substring Detection</div>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#home" class="nav-link">Home</a></li>
+          <li><a href="#analyzer" class="nav-link">Analyzer</a></li>
+          <li><a href="#algorithm" class="nav-link">Algorithm</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. HOME / HERO SECTION
+       ========================================================================= -->
+  <section id="home" class="hero-section">
+    <div class="container">
+      <div class="hero-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Data Structures and Algorithms - 3 (25CS2103E)</span>
+      </div>
+      
+      <h1 class="hero-title">
+        Repeated Substring Detection <span>Using Suffix Structures</span>
+      </h1>
+      
+      <p class="hero-description">
+        Analyze large text documents and identify repeated phrases efficiently using Suffix Arrays and Longest Common Prefix (LCP) arrays. Compare performance against traditional naive substring searches in real time.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="#analyzer" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Start Analysis
+        </a>
+        <a href="#algorithm" class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+          Learn Algorithm
+        </a>
+      </div>
+
+      <!-- 3 Feature Cards -->
+      <div class="feature-cards-grid">
+        <div class="feature-card">
+          <div class="feature-icon-box">SA</div>
+          <h3>Suffix Array</h3>
+          <p>Stores the starting indices of all suffixes in lexicographically sorted order, allowing fast binary searches and pattern clustering in sub-linear bounds.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">LCP</div>
+          <h3>LCP Analysis</h3>
+          <p>Kasai's algorithm computes adjacent longest common prefixes in linear O(n) time, enabling instant extraction of repeated phrases and the Longest Repeated Substring.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">⚡</div>
+          <h3>Performance Comparison</h3>
+          <p>Demonstrates substantial empirical speedup by benchmarking the O(n log n) suffix pipeline directly against brute-force O(n²) substring searches.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       3. ANALYZER SECTION (MAIN WORKING PART)
+       ========================================================================= -->
+  <section id="analyzer" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Interactive Tool</span>
+        <h2 class="section-title">Document Analyzer</h2>
+        <p class="section-subtitle">Enter or upload a text document to detect repeated patterns using Suffix Arrays and LCP.</p>
+      </div>
+
+      <div class="analyzer-card">
+        <!-- Textarea with character counter -->
+        <div class="textarea-wrapper">
+          <textarea id="documentInput" class="analyzer-textarea" placeholder="Enter, paste, or load a text document to begin analysis..."></textarea>
+          <div class="textarea-footer">
+            <div class="sample-bar">
+              <span class="sample-label">Presets:</span>
+              <button type="button" class="sample-chip" onclick="loadSample('academic')">Academic CS Abstract</button>
+              <button type="button" class="sample-chip" onclick="loadSample('dna')">DNA Genetic Sequence</button>
+              <button type="button" class="sample-chip" onclick="loadSample('literature')">Literature Excerpt</button>
+            </div>
+            <div id="charCounter" class="char-counter">0 characters</div>
+          </div>
+        </div>
+
+        <!-- Analyzer Settings -->
+        <div class="analyzer-settings">
+          <div class="setting-group">
+            <label for="minSubstringLen" class="setting-label">
+              Minimum Substring Length
+              <span class="badge badge-len">Filter</span>
+            </label>
+            <input type="number" id="minSubstringLen" class="setting-input" value="3" min="1" max="500">
+            <span class="setting-desc">Ignores repeated patterns shorter than this threshold (Default: 3)</span>
+          </div>
+
+          <div class="setting-group">
+            <label for="maxResults" class="setting-label">
+              Maximum Results
+              <span class="badge badge-count">Limit</span>
+            </label>
+            <input type="number" id="maxResults" class="setting-input" value="50" min="5" max="500">
+            <span class="setting-desc">Top distinct repeated substrings displayed in the table (Default: 50)</span>
+          </div>
+
+          <div class="setting-group" style="justify-content: center;">
+            <label class="setting-label" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem;">
+              <input type="checkbox" id="maximalOnlyCheck" checked style="accent-color: var(--accent-cyan); width: 17px; height: 17px; cursor: pointer;">
+              <span>Maximal Patterns Only</span>
+            </label>
+            <span class="setting-desc">Filter out redundant sub-slices having identical occurrences</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="analyzer-actions">
+          <div class="action-left">
+            <button id="analyzeBtn" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Analyze Document
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="loadSample('academic')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Load Sample Text
+            </button>
+            <label class="btn btn-outline" style="cursor: pointer; margin: 0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Upload Text File
+              <input type="file" id="fileUploadInput" accept=".txt,.md,.csv,.log,.fasta" style="display: none;">
+            </label>
+          </div>
+          <div class="action-right">
+            <button id="clearBtn" class="btn btn-danger-outline">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Status & Validation Banner -->
+        <div id="statusBanner" class="status-banner"></div>
+      </div>
+
+      <!-- =====================================================================
+           4. RESULTS DASHBOARD
+           ===================================================================== -->
+      <div id="resultsDashboard" style="display: none; margin-top: 3.5rem;">
+        <div class="section-header">
+          <span class="section-tag">Computed Metrics</span>
+          <h3 class="section-title">Results Dashboard</h3>
+          <p class="section-subtitle">Real-time statistics derived directly from your input document.</p>
+        </div>
+
+        <!-- Summary Cards Grid -->
+        <div class="dashboard-grid">
+          <div class="summary-card">
+            <span class="summary-card-title">Total Characters</span>
+            <div id="metricTotalChars" class="summary-card-value">0</div>
+            <span class="summary-card-sub">Document size</span>
+          </div>
+
+          <div class="summary-card">
+            <span class="summary-card-title">Total Suffixes</span>
+            <div id="metricTotalSuffixes" class="summary-card-value">0</div>
+            <span class="summary-card-sub">Suffix array length</span>
+          </div>
+
+          <div class="summary-card">
+            <span class="summary-card-title">Repeated Found</span>
+            <div id="metricRepeatedFound" class="summary-card-value accent">0</div>
+            <span class="summary-card-sub">Distinct patterns</span>
+          </div>
+
+          <div class="summary-card">
+            <span class="summary-card-title">Longest Repeated</span>
+            <div id="metricLRS" class="summary-card-value" style="font-size: 1.25rem;">None</div>
+            <span class="summary-card-sub">Maximal pattern</span>
+          </div>
+
+          <div class="summary-card">
+            <span class="summary-card-title">Total Occurrences</span>
+            <div id="metricTotalOccurrences" class="summary-card-value">0</div>
+            <span class="summary-card-sub">Of longest pattern</span>
+          </div>
+
+          <div class="summary-card">
+            <span class="summary-card-title">SA Execution Time</span>
+            <div id="metricExecutionTime" class="summary-card-value accent">0 ms</div>
+            <span class="summary-card-sub">SA + Kasai LCP</span>
+          </div>
+        </div>
+
+        <!-- ===================================================================
+             5. LONGEST REPEATED SUBSTRING (HIGHLIGHT BOX)
+             =================================================================== -->
+        <div id="lrsSection" style="display: none;">
+          <div class="lrs-highlight-box">
+            <div id="lrsDetailsContent">
+              <!-- Dynamically Populated by script.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Repeated Substrings Table -->
+        <div class="table-card">
+          <div class="table-header-toolbar">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="table-title">Detected Repeated Substrings</span>
+              <span id="tableResultsCountBadge" class="badge badge-count">0</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <input type="text" id="tableFilter" class="table-filter-input" placeholder="Search detected patterns...">
+              <button type="button" id="exportCsvBtn" class="btn btn-secondary" style="padding: 0.42rem 0.85rem; font-size: 0.82rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 38%;">Repeated Substring</th>
+                  <th style="width: 12%;">Length</th>
+                  <th style="width: 15%;">Occurrences</th>
+                  <th style="width: 35%;">Positions (0-indexed)</th>
+                </tr>
+              </thead>
+              <tbody id="substringsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           6. LCP VISUALIZATION SECTION
+           ===================================================================== -->
+      <div id="lcpSection" style="display: none; margin-top: 3.5rem;">
+        <div class="section-header">
+          <span class="section-tag">Array Breakdown</span>
+          <h3 class="section-title">LCP Array &amp; Suffix Order Visualization</h3>
+          <p class="section-subtitle">Visual representation of the sorted Suffix Array and Kasai's Longest Common Prefix values.</p>
+        </div>
+
+        <div class="table-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 10%;">Rank (i)</th>
+                  <th style="width: 15%;">Position (sa[i])</th>
+                  <th style="width: 50%;">Suffix Preview</th>
+                  <th style="width: 25%;">LCP Value (lcp[i])</th>
+                </tr>
+              </thead>
+              <tbody id="lcpTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div id="lcpFootnote" style="padding: 0.85rem 1.25rem; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); background: var(--bg-secondary);">
+            Showing sorted suffixes in the suffix array.
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           7. PERFORMANCE COMPARISON SECTION
+           ===================================================================== -->
+      <div id="performanceSection" style="display: none; margin-top: 3.5rem;">
+        <div class="section-header">
+          <span class="section-tag">Empirical Benchmark</span>
+          <h3 class="section-title">Performance Comparison</h3>
+          <p class="section-subtitle">Comparing Suffix Array + LCP against the Naïve Brute-Force Substring Search using high-precision performance.now().</p>
+        </div>
+
+        <div class="perf-grid">
+          <!-- Benchmark Table Card -->
+          <div class="perf-card">
+            <div class="perf-card-title">
+              <span>Benchmark Results</span>
+              <span id="speedupBadge" class="speedup-badge" style="display: none;">0x Faster</span>
+            </div>
+
+            <table class="data-table" style="margin-bottom: 1rem;">
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Execution Time</th>
+                  <th>Results Found</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight: 600; color: var(--text-accent);">Suffix Array + LCP</td>
+                  <td id="saTimeCell" class="mono">0.00 ms</td>
+                  <td id="saResultsCell" class="mono">0</td>
+                </tr>
+                <tr>
+                  <td style="font-weight: 600; color: var(--text-warning);">Naïve Search</td>
+                  <td id="naiveTimeCell" class="mono">0.00 ms</td>
+                  <td id="naiveResultsCell" class="mono">0</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+              Suffix Array sorts all suffixes in O(n log² n) and builds LCP in linear O(n), avoiding brute force combinatorics.
+            </p>
+          </div>
+
+          <!-- Visual Bar Chart Card -->
+          <div class="perf-card">
+            <div class="perf-card-title">
+              <span>Execution Time Comparison</span>
+            </div>
+
+            <div class="chart-container">
+              <!-- Suffix Array Bar -->
+              <div class="chart-bar-group">
+                <div class="chart-bar-label-row">
+                  <span style="color: var(--text-accent); font-weight: 600;">Suffix Array + LCP (O(n log n))</span>
+                </div>
+                <div class="chart-bar-wrapper">
+                  <div id="saBarFill" class="chart-bar-fill sa" style="width: 10%;">0.00 ms</div>
+                </div>
+              </div>
+
+              <!-- Naive Bar -->
+              <div class="chart-bar-group">
+                <div class="chart-bar-label-row">
+                  <span style="color: var(--text-warning); font-weight: 600;">Naïve Substring Search (O(n²))</span>
+                </div>
+                <div class="chart-bar-wrapper">
+                  <div id="naiveBarFill" class="chart-bar-fill naive" style="width: 10%;">0.00 ms</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-footnote">
+              * Shorter execution bar denotes superior computational efficiency and responsiveness.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       8. ALGORITHM SECTION (EDUCATIONAL / DEMONSTRATION)
+       ========================================================================= -->
+  <section id="algorithm" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Theory &amp; Concepts</span>
+        <h2 class="section-title">Algorithm Explanation</h2>
+        <p class="section-subtitle">How suffix arrays and Longest Common Prefix arrays solve repeated substring detection efficiently.</p>
+      </div>
+
+      <!-- Algorithm Cards Grid -->
+      <div class="algo-cards-grid">
+        <div class="algo-card">
+          <span class="algo-card-badge">Data Structure</span>
+          <h3>Suffix Array</h3>
+          <p>
+            A Suffix Array stores the starting positions of all suffixes of a document in lexicographically sorted order. By grouping identical prefixes together in adjacent positions, pattern searching and repetitive structure identification become highly optimized.
+          </p>
+          <div class="complexity">
+            <span>Construction:</span>
+            <span class="mono">O(n log² n) / O(n)</span>
+          </div>
+        </div>
+
+        <div class="algo-card">
+          <span class="algo-card-badge">Kasai's Algorithm</span>
+          <h3>Longest Common Prefix (LCP)</h3>
+          <p>
+            The LCP array stores the length of the longest common prefix between adjacent suffixes in the sorted suffix array. Kasai's algorithm computes this entire array in linear O(n) time by taking advantage of prefix relationships between consecutively positioned suffixes.
+          </p>
+          <div class="complexity">
+            <span>Kasai Complexity:</span>
+            <span class="mono">O(n) time, O(n) space</span>
+          </div>
+        </div>
+
+        <div class="algo-card">
+          <span class="algo-card-badge">Detection</span>
+          <h3>Repeated Substrings</h3>
+          <p>
+            Any substring that occurs at least twice in a document must appear as a common prefix of at least two different suffixes. Therefore, inspecting LCP values equal to or exceeding the minimum length immediately reveals repeated substrings without exhaustive substring generation.
+          </p>
+          <div class="complexity">
+            <span>Extraction:</span>
+            <span class="mono">O(n) scan over LCP</span>
+          </div>
+        </div>
+
+        <div class="algo-card">
+          <span class="algo-card-badge">Baseline Comparison</span>
+          <h3>Naïve Approach</h3>
+          <p>
+            The naïve method checks candidate substrings across all combinations of starting indices and lengths. Each candidate requires scanning the remainder of the document with string comparison, creating combinatorial overhead that scales poorly for large documents.
+          </p>
+          <div class="complexity">
+            <span>Naive Complexity:</span>
+            <span class="mono">O(n²) to O(n³)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Algorithm Flow Diagram -->
+      <div class="flow-diagram-card">
+        <h3 class="flow-title">Algorithmic Processing Pipeline</h3>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 01</div>
+            <div class="flow-step-title">Input Document</div>
+            <div class="flow-step-desc">Ingest raw text and record string length n</div>
+          </div>
+
+          <div class="flow-arrow">→</div>
+
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 02</div>
+            <div class="flow-step-title">Generate Suffixes</div>
+            <div class="flow-step-desc">Establish 0 to n-1 suffix starting indices</div>
+          </div>
+
+          <div class="flow-arrow">→</div>
+
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 03</div>
+            <div class="flow-step-title">Build Suffix Array</div>
+            <div class="flow-step-desc">Sort suffixes lexicographically via prefix doubling</div>
+          </div>
+
+          <div class="flow-arrow">→</div>
+
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 04</div>
+            <div class="flow-step-title">Calculate LCP</div>
+            <div class="flow-step-desc">Run Kasai's algorithm to obtain adjacent LCPs in O(n)</div>
+          </div>
+
+          <div class="flow-arrow">→</div>
+
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 05</div>
+            <div class="flow-step-title">Find Repeated</div>
+            <div class="flow-step-desc">Filter LCP &ge; threshold and extract occurrences</div>
+          </div>
+
+          <div class="flow-arrow">→</div>
+
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 06</div>
+            <div class="flow-step-title">Generate Results</div>
+            <div class="flow-step-desc">Output LRS, dashboard metrics, and benchmark</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       9. ABOUT SECTION
+       ========================================================================= -->
+  <section id="about" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Project Details</span>
+        <h2 class="section-title">About the Project</h2>
+        <p class="section-subtitle">Academic project demonstration details, team members, and faculty guidance.</p>
+      </div>
+
+      <div class="about-grid">
+        <!-- Project & Course Details Card -->
+        <div class="about-card">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Project Information
+          </h3>
+
+          <div class="project-details-list">
+            <div class="detail-row">
+              <span class="detail-label">Project Title</span>
+              <span class="detail-value">Repeated Substring Detection in Large Documents Using Suffix Structures</span>
+            </div>
+
+            <div class="detail-row">
+              <span class="detail-label">Course</span>
+              <span class="detail-value">Data Structures and Algorithms - 3 (25CS2103E)</span>
+            </div>
+
+            <div class="detail-row">
+              <span class="detail-label">Academic Year</span>
+              <span class="detail-value">2026-2027</span>
+            </div>
+
+            <div class="detail-row">
+              <span class="detail-label">Section</span>
+              <span class="detail-value">5</span>
+            </div>
+          </div>
+
+          <div class="guide-box">
+            <div class="guide-avatar">DS</div>
+            <div>
+              <div class="detail-label">Project Guide</div>
+              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">D. SWATHI</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">Assistant Professor, Department of Computer Science and Engineering</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Members Card -->
+        <div class="about-card">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Team Members
+          </h3>
+
+          <ul class="team-list">
+            <li class="team-item">
+              <div class="team-avatar">AI</div>
+              <div class="team-info">
+                <span class="team-name">KUDUMULA ASHISH IGNATIUS</span>
+                <span class="team-role">DSA-3 Student Contributor</span>
+              </div>
+            </li>
+
+            <li class="team-item">
+              <div class="team-avatar">PG</div>
+              <div class="team-info">
+                <span class="team-name">NARAYANAGARI PRUDVIRAJ GOUD</span>
+                <span class="team-role">DSA-3 Student Contributor</span>
+              </div>
+            </li>
+
+            <li class="team-item">
+              <div class="team-avatar">ND</div>
+              <div class="team-info">
+                <span class="team-name">KOLASANI NAVADEEP</span>
+                <span class="team-role">DSA-3 Student Contributor</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       FOOTER
+       ========================================================================= -->
+  <footer class="footer">
+    <div class="container">
+      <p><strong>Repeated Substring Detection in Large Documents Using Suffix Structures</strong></p>
+      <p>Data Structures and Algorithms - 3 (25CS2103E) &bull; Academic Year 2026-2027 &bull; Section 5</p>
+    </div>
+  </footer>
+
+  <!-- Project JavaScript Script -->
+  <script src="script.js"></script>
+</body>
+</html>
